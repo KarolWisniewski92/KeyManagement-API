@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
-const { User } = require('./data/schema');
+const { User, Key } = require('./data/schema');
 
 const app = express();
 
@@ -143,7 +143,7 @@ app.get('/user', (req, res) => {
 app.post('/getUserData', (req, res) => {
     User.findOne({ user_id: req.body.userID })
         .then(async (user) => {
-            console.log({ user })
+            // console.log({ user })
             if (user !== null) {
                 const userToSend = user;
                 userToSend.password = undefined;
@@ -156,6 +156,39 @@ app.post('/getUserData', (req, res) => {
         })
 
 })
+
+
+//Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
+app.get('/getKeysData', (req, res) => {
+    console.log(req.query.set)
+    Key.find({ set: req.query.set })
+        .then(keys => {
+            res.send(JSON.stringify(keys))
+
+        })
+});
+
+//Tymczasowe szybkie dodawanie kluczy do bazy danych
+
+// app.get('/addKey', (req, res) => {
+//     const newKey = new Key({
+//         keyID: "KP_3123",
+//         set: "KP",
+//         name: "Mosina pod Poznaniem",
+//         isTaken: false,
+//         isTakenBy: "",
+//         isTakenData: "",
+//         isTransferedTo: "",
+//         adres: "ul.Misiowa 11 dom 2 mieszkanie 4"
+//     })
+//     newKey.save()
+//         .then(data => {
+//             res.send(`Poprawnie utworzono nowy klucz!`)
+//         })
+//         .catch(err => {
+//             throw err;
+//         })
+// })
 
 
 
