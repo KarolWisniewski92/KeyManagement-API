@@ -130,14 +130,14 @@ app.post('/register', async (req, res) => {
 
 })
 
+// Odsyła informacje o obecnie zalogowanym użytkowniku.
 app.get('/user', (req, res) => {
-    // console.log(req.user)
     if (req.user === undefined) {
         res.send({})
     } else {
         res.send(JSON.stringify(req.user[0]));
     }
-})
+});
 
 //Pobieramy urzytkownika o nadesłanych user_id. Usuwamy klucz password i odsyłamy.
 app.post('/getUserData', (req, res) => {
@@ -152,19 +152,34 @@ app.post('/getUserData', (req, res) => {
                 const userToSend = {};
                 res.send(JSON.stringify(userToSend))
             }
-
         })
-
-})
+        .catch(err => {
+            throw err;
+        })
+});
 
 
 //Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
 app.get('/getKeysData', (req, res) => {
-    console.log(req.query.set)
     Key.find({ set: req.query.set })
         .then(keys => {
             res.send(JSON.stringify(keys))
 
+        })
+        .catch(err => {
+            throw err;
+        })
+});
+
+//Wyszukujemy klucze które obecnie posiada użytkownik.
+app.get('/getMyKeysData', (req, res) => {
+    const user = req.query.user_id;
+    Key.find({ isTakenBy: req.query.user_id })
+        .then(keys => {
+            res.send(JSON.stringify(keys))
+        })
+        .catch(err => {
+            throw err;
         })
 });
 
