@@ -183,6 +183,33 @@ app.get('/getMyKeysData', (req, res) => {
         })
 });
 
+//Wyszukujemy klucz i aktualizujemy jego wartość na podstawie otrzymanych danych.
+app.post('/isTakenByUpdate', async (req, res) => {
+
+    const dataToUpdate = {
+        isTakenBy: req.body.isTakenBy,
+        isTaken: req.body.isTaken,
+        isTakenData: req.body.isTakenData
+    }
+
+    await Key.findOneAndUpdate({ keyID: req.body.keyID }, dataToUpdate)
+        .then(() => {
+            res.send(JSON.stringify({
+                error: false,
+                message: ""
+            }))
+        })
+        .catch((err) => {
+            res.send(JSON.stringify({
+                error: true,
+                message: err.message
+            }))
+        })
+
+
+
+})
+
 //Tymczasowe szybkie dodawanie kluczy do bazy danych
 
 // app.get('/addKey', (req, res) => {
