@@ -9,6 +9,7 @@ const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
 const { User, Key } = require('./data/schema');
+const { json } = require('express');
 
 const app = express();
 
@@ -208,6 +209,49 @@ app.post('/isTakenByUpdate', async (req, res) => {
 
 
 
+})
+
+
+//Wyszukujemy użytkowników po nadełanych danych Imię, Nazwisko, Email, lub imię i nazwisko
+app.get('/findUserToTransfer', (req, res) => {
+    const user = req.query.user;
+    console.log(user)
+    const data = user.split(' ');
+    console.log(data)
+    let dataToFind = ``;
+    console.log(data.length)
+
+    if (data.length === 2) {
+        User.find({ name: { $in: [data[0], data[1]] }, surname: { $in: [data[0], data[1]] } })
+            .then((data) => {
+                const newDataToSend = data.map(el => {
+                    el.password = undefined;
+                    el.isActive = undefined;
+                    el.phone = undefined;
+                    el.email = undefined;
+                    el.role = undefined;
+                    return el;
+                })
+                res.send(JSON.stringify(newDataToSend))
+            })
+    } else if
+        (data.length === 1) {
+        User.find({ $or: [{ name: data[0] }, { surname: data[0] }, { email: data[0] }] })
+            .then((data) => {
+                const newDataToSend = data.map(el => {
+                    el.password = undefined;
+                    el.isActive = undefined;
+                    el.phone = undefined;
+                    el.email = undefined;
+                    el.role = undefined;
+                    return el;
+                })
+                res.send(JSON.stringify(newDataToSend))
+            })
+    }
+
+
+    // User.find({ $or: [{ name: data[0], surname: data[1] }, { name: data[1], surname: data[0] }] })
 })
 
 //Tymczasowe szybkie dodawanie kluczy do bazy danych
