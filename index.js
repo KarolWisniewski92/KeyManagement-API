@@ -8,13 +8,20 @@ const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const session = require('express-session');
 
-const { User, Key } = require('./data/schema');
-const { json } = require('express');
+const {
+    User,
+    Key
+} = require('./data/schema');
+const {
+    json
+} = require('express');
 
 const app = express();
 
 app.use(express.json())
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+    extended: true
+}));
 app.use(session({
     secret: "secretcode",
     resave: true,
@@ -34,9 +41,9 @@ require('./passportConfig')(passport);
 //----------------mongoose configuration-----------
 
 mongoose.connect(process.env.DB_HOST, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    })
     .catch(err => console.log(`Database connection error! CODE: "${err.code}"`));
 
 const db = mongoose.connection;
@@ -52,17 +59,23 @@ app.use(cors({
 
 //----------------ROUTING----------------------------
 
-app.get('/', async function (req, res) {
-})
+app.get('/', async function (req, res) {})
 
 app.post('/login', async (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
         if (err) throw err;
-        if (!user) res.send("No User Exists")
-        else {
+        if (typeof info !== "undefined") { //Jeżeli wystąpił jakiś błąd to jego text jest pod info. Jeżeli błędów nie ma to info jest undefinded.
+            res.send(JSON.stringify({ // Wysyła informacje o błędzie który wystąpił! 
+                error: true,
+                message: info
+            }))
+        } else {
             req.logIn(user, err => {
                 if (err) throw err;
-                res.send("Succesfully Authenticated")
+                res.send(JSON.stringify({
+                    error: false,
+                    message: "Pomyślnie zalogowano!"
+                }))
                 console.log(`Zalogował się ${req.user.name} ${req.user.surname}`)
             })
         }
@@ -70,14 +83,18 @@ app.post('/login', async (req, res, next) => {
 })
 
 app.get('/logout', (req, res) => {
+    console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname}`);
     req.logout();
     res.send('Wylogowano!')
+
 });
 
 
 app.post('/register', async (req, res) => {
 
-    User.findOne({ email: req.body.email })
+    User.findOne({
+            email: req.body.email
+        })
         .then(async (user) => {
             if (user !== null) {
                 res.send(JSON.stringify(`Użytkownik już istnieje!`))
@@ -98,7 +115,9 @@ app.post('/register', async (req, res) => {
                 }
 
                 const id = generateID(length);
-                const isAvailable = await User.find({ id: id })
+                const isAvailable = await User.find({
+                        id: id
+                    })
                     .then(user => {
                         return user.length === 0 ? true : false
                     })
@@ -142,7 +161,9 @@ app.get('/user', (req, res) => {
 
 //Pobieramy urzytkownika o nadesłanych user_id. Usuwamy klucz password i odsyłamy.
 app.post('/getUserData', (req, res) => {
-    User.findOne({ user_id: req.body.userID })
+    User.findOne({
+            user_id: req.body.userID
+        })
         .then(async (user) => {
             // console.log({ user })
             if (user !== null) {
@@ -162,7 +183,9 @@ app.post('/getUserData', (req, res) => {
 
 //Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
 app.get('/getKeysData', (req, res) => {
-    Key.find({ set: req.query.set })
+    Key.find({
+            set: req.query.set
+        })
         .then(keys => {
             res.send(JSON.stringify(keys))
 
@@ -175,7 +198,9 @@ app.get('/getKeysData', (req, res) => {
 //Wyszukujemy klucze które obecnie posiada użytkownik.
 app.get('/getMyKeysData', (req, res) => {
     const user = req.query.user_id;
-    Key.find({ isTakenBy: req.query.user_id })
+    Key.find({
+            isTakenBy: req.query.user_id
+        })
         .then(keys => {
             res.send(JSON.stringify(keys))
         })
@@ -186,14 +211,18 @@ app.get('/getMyKeysData', (req, res) => {
 
 //Wyszukujemy klucz i aktualizujemy jego wartość na podstawie otrzymanych danych.
 app.post('/isTakenByUpdate', async (req, res) => {
+    console.log(req.user)
 
     const dataToUpdate = {
         isTakenBy: req.body.isTakenBy,
         isTaken: req.body.isTaken,
-        isTakenData: req.body.isTakenData
+        isTakenData: req.body.isTakenData,
+        isTransferedTo: ""
     }
 
-    await Key.findOneAndUpdate({ keyID: req.body.keyID }, dataToUpdate)
+    await Key.findOneAndUpdate({
+            keyID: req.body.keyID
+        }, dataToUpdate)
         .then(() => {
             res.send(JSON.stringify({
                 error: false,
@@ -211,18 +240,45 @@ app.post('/isTakenByUpdate', async (req, res) => {
 
 })
 
+app.post('/isTransferedToUpdate', async (req, res) => {
+    const dataToUpdate = {
+        isTransferedTo: req.body.user_id
+    }
+
+    await Key.findOneAndUpdate({
+            keyID: req.body.keyID
+        }, dataToUpdate)
+        .then(() => {
+            res.send(JSON.stringify({
+                error: false,
+                message: ""
+            }))
+        })
+        .catch((err) => {
+            res.send(JSON.stringify({
+                error: true,
+                message: err.message
+            }))
+        })
+
+})
+
 
 //Wyszukujemy użytkowników po nadełanych danych Imię, Nazwisko, Email, lub imię i nazwisko
 app.get('/findUserToTransfer', (req, res) => {
     const user = req.query.user;
-    console.log(user)
     const data = user.split(' ');
-    console.log(data)
     let dataToFind = ``;
-    console.log(data.length)
 
     if (data.length === 2) {
-        User.find({ name: { $in: [data[0], data[1]] }, surname: { $in: [data[0], data[1]] } })
+        User.find({
+                name: {
+                    $in: [data[0], data[1]]
+                },
+                surname: {
+                    $in: [data[0], data[1]]
+                }
+            })
             .then((data) => {
                 const newDataToSend = data.map(el => {
                     el.password = undefined;
@@ -234,9 +290,16 @@ app.get('/findUserToTransfer', (req, res) => {
                 })
                 res.send(JSON.stringify(newDataToSend))
             })
-    } else if
-        (data.length === 1) {
-        User.find({ $or: [{ name: data[0] }, { surname: data[0] }, { email: data[0] }] })
+    } else if (data.length === 1) {
+        User.find({
+                $or: [{
+                    name: data[0]
+                }, {
+                    surname: data[0]
+                }, {
+                    email: data[0]
+                }]
+            })
             .then((data) => {
                 const newDataToSend = data.map(el => {
                     el.password = undefined;
@@ -249,23 +312,32 @@ app.get('/findUserToTransfer', (req, res) => {
                 res.send(JSON.stringify(newDataToSend))
             })
     }
+})
 
-
-    // User.find({ $or: [{ name: data[0], surname: data[1] }, { name: data[1], surname: data[0] }] })
+app.get('/keysTransferedToMe', (req, res) => {
+    Key.find({
+            isTransferedTo: req.query.user
+        })
+        .then(data => {
+            res.send(JSON.stringify(data))
+        })
+        .catch(err => {
+            throw err;
+        })
 })
 
 //Tymczasowe szybkie dodawanie kluczy do bazy danych
 
 // app.get('/addKey', (req, res) => {
 //     const newKey = new Key({
-//         keyID: "KP_3123",
+//         keyID: "KP_0016",
 //         set: "KP",
-//         name: "Mosina pod Poznaniem",
+//         name: "Czempiń (pow. Kościański)",
 //         isTaken: false,
 //         isTakenBy: "",
 //         isTakenData: "",
 //         isTransferedTo: "",
-//         adres: "ul.Misiowa 11 dom 2 mieszkanie 4"
+//         adres: "ul. Przedszkolna 1"
 //     })
 //     newKey.save()
 //         .then(data => {
