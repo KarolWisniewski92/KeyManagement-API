@@ -57,6 +57,17 @@ app.use(cors({
     credentials: true
 }))
 
+
+//----------------FUNCTIONS-------------------------
+const confirmUserPermissions = (req, res, callback) => {
+    const check = typeof req.user !== "undefined" ? true : false;
+    if (check) {
+        callback();
+    } else {
+        res.status(401).end(); //Zakończ i wyślij kod Unauthorized!
+    }
+}
+
 //----------------ROUTING----------------------------
 
 app.get('/', async function (req, res) {})
@@ -83,7 +94,9 @@ app.post('/login', async (req, res, next) => {
 })
 
 app.get('/logout', (req, res) => {
-    console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname}`);
+    if (typeof req.user !== "undefined") {
+        console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname}`);
+    }
     req.logout();
     res.send('Wylogowano!')
 
@@ -161,169 +174,182 @@ app.get('/user', (req, res) => {
 
 //Pobieramy urzytkownika o nadesłanych user_id. Usuwamy klucz password i odsyłamy.
 app.post('/getUserData', (req, res) => {
-    User.findOne({
-            user_id: req.body.userID
-        })
-        .then(async (user) => {
-            // console.log({ user })
-            if (user !== null) {
-                const userToSend = user;
-                userToSend.password = undefined;
-                res.send(JSON.stringify(userToSend))
-            } else {
-                const userToSend = {};
-                res.send(JSON.stringify(userToSend))
-            }
-        })
-        .catch(err => {
-            throw err;
-        })
+    confirmUserPermissions(req, res, () => {
+        User.findOne({
+                user_id: req.body.userID
+            })
+            .then(async (user) => {
+                // console.log({ user })
+                if (user !== null) {
+                    const userToSend = user;
+                    userToSend.password = undefined;
+                    res.send(JSON.stringify(userToSend))
+                } else {
+                    const userToSend = {};
+                    res.send(JSON.stringify(userToSend))
+                }
+            })
+            .catch(err => {
+                throw err;
+            })
+    })
+
 });
 
 
 //Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
 app.get('/getKeysData', (req, res) => {
-    Key.find({
-            set: req.query.set
-        })
-        .then(keys => {
-            res.send(JSON.stringify(keys))
+    confirmUserPermissions(req, res, () => {
+        Key.find({
+                set: req.query.set
+            })
+            .then(keys => {
+                res.send(JSON.stringify(keys))
 
-        })
-        .catch(err => {
-            throw err;
-        })
+            })
+            .catch(err => {
+                throw err;
+            })
+    })
+
 });
 
 //Wyszukujemy klucze które obecnie posiada użytkownik.
 app.get('/getMyKeysData', (req, res) => {
-    const user = req.query.user_id;
-    Key.find({
-            isTakenBy: req.query.user_id
-        })
-        .then(keys => {
-            res.send(JSON.stringify(keys))
-        })
-        .catch(err => {
-            throw err;
-        })
+    confirmUserPermissions(req, res, () => {
+        Key.find({
+                isTakenBy: req.query.user_id
+            })
+            .then(keys => {
+                res.send(JSON.stringify(keys))
+            })
+            .catch(err => {
+                throw err;
+            })
+    })
+
 });
 
 //Wyszukujemy klucz i aktualizujemy jego wartość na podstawie otrzymanych danych.
-app.post('/isTakenByUpdate', async (req, res) => {
-    console.log(req.user)
+app.post('/isTakenByUpdate', (req, res) => {
+    confirmUserPermissions(req, res, async () => {
 
-    const dataToUpdate = {
-        isTakenBy: req.body.isTakenBy,
-        isTaken: req.body.isTaken,
-        isTakenData: req.body.isTakenData,
-        isTransferedTo: ""
-    }
+        const dataToUpdate = {
+            isTakenBy: req.body.isTakenBy,
+            isTaken: req.body.isTaken,
+            isTakenData: req.body.isTakenData,
+            isTransferedTo: ""
+        }
 
-    await Key.findOneAndUpdate({
-            keyID: req.body.keyID
-        }, dataToUpdate)
-        .then(() => {
-            res.send(JSON.stringify({
-                error: false,
-                message: ""
-            }))
-        })
-        .catch((err) => {
-            res.send(JSON.stringify({
-                error: true,
-                message: err.message
-            }))
-        })
-
-
-
+        await Key.findOneAndUpdate({
+                keyID: req.body.keyID
+            }, dataToUpdate)
+            .then(() => {
+                res.send(JSON.stringify({
+                    error: false,
+                    message: ""
+                }))
+            })
+            .catch((err) => {
+                res.send(JSON.stringify({
+                    error: true,
+                    message: err.message
+                }))
+            })
+    })
 })
 
-app.post('/isTransferedToUpdate', async (req, res) => {
-    const dataToUpdate = {
-        isTransferedTo: req.body.user_id
-    }
+app.post('/isTransferedToUpdate', (req, res) => {
+    confirmUserPermissions(req, res, async () => {
+        const dataToUpdate = {
+            isTransferedTo: req.body.user_id
+        }
 
-    await Key.findOneAndUpdate({
-            keyID: req.body.keyID
-        }, dataToUpdate)
-        .then(() => {
-            res.send(JSON.stringify({
-                error: false,
-                message: ""
-            }))
-        })
-        .catch((err) => {
-            res.send(JSON.stringify({
-                error: true,
-                message: err.message
-            }))
-        })
-
+        await Key.findOneAndUpdate({
+                keyID: req.body.keyID
+            }, dataToUpdate)
+            .then(() => {
+                res.send(JSON.stringify({
+                    error: false,
+                    message: ""
+                }))
+            })
+            .catch((err) => {
+                res.send(JSON.stringify({
+                    error: true,
+                    message: err.message
+                }))
+            })
+    })
 })
 
 
 //Wyszukujemy użytkowników po nadełanych danych Imię, Nazwisko, Email, lub imię i nazwisko
 app.get('/findUserToTransfer', (req, res) => {
-    const user = req.query.user;
-    const data = user.split(' ');
-    let dataToFind = ``;
+    confirmUserPermissions(req, res, () => {
+        const user = req.query.user;
+        const data = user.split(' ');
+        let dataToFind = ``;
 
-    if (data.length === 2) {
-        User.find({
-                name: {
-                    $in: [data[0], data[1]]
-                },
-                surname: {
-                    $in: [data[0], data[1]]
-                }
-            })
-            .then((data) => {
-                const newDataToSend = data.map(el => {
-                    el.password = undefined;
-                    el.isActive = undefined;
-                    el.phone = undefined;
-                    el.email = undefined;
-                    el.role = undefined;
-                    return el;
+        if (data.length === 2) {
+            User.find({
+                    name: {
+                        $in: [data[0], data[1]]
+                    },
+                    surname: {
+                        $in: [data[0], data[1]]
+                    }
                 })
-                res.send(JSON.stringify(newDataToSend))
-            })
-    } else if (data.length === 1) {
-        User.find({
-                $or: [{
-                    name: data[0]
-                }, {
-                    surname: data[0]
-                }, {
-                    email: data[0]
-                }]
-            })
-            .then((data) => {
-                const newDataToSend = data.map(el => {
-                    el.password = undefined;
-                    el.isActive = undefined;
-                    el.phone = undefined;
-                    el.email = undefined;
-                    el.role = undefined;
-                    return el;
+                .then((data) => {
+                    const newDataToSend = data.map(el => {
+                        el.password = undefined;
+                        el.isActive = undefined;
+                        el.phone = undefined;
+                        el.email = undefined;
+                        el.role = undefined;
+                        return el;
+                    })
+                    res.send(JSON.stringify(newDataToSend))
                 })
-                res.send(JSON.stringify(newDataToSend))
-            })
-    }
+        } else if (data.length === 1) {
+            User.find({
+                    $or: [{
+                        name: data[0]
+                    }, {
+                        surname: data[0]
+                    }, {
+                        email: data[0]
+                    }]
+                })
+                .then((data) => {
+                    const newDataToSend = data.map(el => {
+                        el.password = undefined;
+                        el.isActive = undefined;
+                        el.phone = undefined;
+                        el.email = undefined;
+                        el.role = undefined;
+                        return el;
+                    })
+                    res.send(JSON.stringify(newDataToSend))
+                })
+        }
+    })
+
 })
 
 app.get('/keysTransferedToMe', (req, res) => {
-    Key.find({
-            isTransferedTo: req.query.user
-        })
-        .then(data => {
-            res.send(JSON.stringify(data))
-        })
-        .catch(err => {
-            throw err;
-        })
+    confirmUserPermissions(req, res, () => {
+        Key.find({
+                isTransferedTo: req.query.user
+            })
+            .then(data => {
+                res.send(JSON.stringify(data))
+            })
+            .catch(err => {
+                throw err;
+            })
+    })
+
 })
 
 //Tymczasowe szybkie dodawanie kluczy do bazy danych
