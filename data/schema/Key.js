@@ -10,6 +10,7 @@ const keySchema = new mongoose.Schema({
     isTakenBy: String,
     isTakenData: String,
     isTransferedTo: String,
+    imageID: Number
 });
 
 module.exports = mongoose.model('Key', keySchema);

@@ -352,18 +352,20 @@ app.get('/keysTransferedToMe', (req, res) => {
 
 })
 
-//Tymczasowe szybkie dodawanie kluczy do bazy danych
+// Tymczasowe szybkie dodawanie kluczy do bazy danych
 
 // app.get('/addKey', (req, res) => {
 //     const newKey = new Key({
 //         keyID: "KP_0016",
-//         set: "KP",
+//         set: "NOC",
+//         owner: "WSS",
 //         name: "Czempiń (pow. Kościański)",
 //         isTaken: false,
 //         isTakenBy: "",
 //         isTakenData: "",
 //         isTransferedTo: "",
-//         adres: "ul. Przedszkolna 1"
+//         adres: "ul. Przedszkolna 1",
+//         imageID: 2
 //     })
 //     newKey.save()
 //         .then(data => {
