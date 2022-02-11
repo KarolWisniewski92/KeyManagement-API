@@ -8,7 +8,7 @@ const keySchema = new mongoose.Schema({
     adres: String,
     isTaken: Boolean,
     isTakenBy: String,
-    isTakenData: String,
+    isTakenData: Date,
     isTransferedTo: String,
     imageID: Number
 });

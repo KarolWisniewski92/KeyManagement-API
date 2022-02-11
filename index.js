@@ -10,7 +10,8 @@ const session = require('express-session');
 
 const {
     User,
-    Key
+    Key,
+    History
 } = require('./data/schema');
 const {
     json
@@ -214,6 +215,23 @@ app.get('/getKeysData', (req, res) => {
 
 });
 
+//Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
+app.get('/getKeyData', (req, res) => {
+    confirmUserPermissions(req, res, () => {
+        Key.find({
+                keyID: req.query.keyID
+            })
+            .then(key => {
+                res.send(JSON.stringify(key))
+
+            })
+            .catch(err => {
+                throw err;
+            })
+    })
+
+});
+
 //Wyszukujemy klucze które obecnie posiada użytkownik.
 app.get('/getMyKeysData', (req, res) => {
     confirmUserPermissions(req, res, () => {
@@ -245,6 +263,7 @@ app.post('/isTakenByUpdate', (req, res) => {
                 keyID: req.body.keyID
             }, dataToUpdate)
             .then(() => {
+                addHistory(dataToUpdate)
                 res.send(JSON.stringify({
                     error: false,
                     message: ""
@@ -258,6 +277,17 @@ app.post('/isTakenByUpdate', (req, res) => {
             })
     })
 })
+
+//Robimy wpis do historii
+const addHistory = (data) => {
+
+    if (data.isTaken === true) {
+        console.log(`pobieramy klucz`)
+    } else {
+        console.log(`zwracamy klucz`)
+    }
+
+}
 
 app.post('/isTransferedToUpdate', (req, res) => {
     confirmUserPermissions(req, res, async () => {
@@ -337,6 +367,22 @@ app.get('/findUserToTransfer', (req, res) => {
 
 })
 
+
+app.get('/getKeyHistory', (req, res) => {
+    console.log(req.query.keyID)
+    History.find({
+            keyID: req.query.keyID
+        })
+        .then(data => {
+            console.log(data)
+            res.send(JSON.stringify(data))
+        })
+        .catch(err => {
+            throw err;
+        })
+
+})
+
 app.get('/keysTransferedToMe', (req, res) => {
     confirmUserPermissions(req, res, () => {
         Key.find({
@@ -350,6 +396,27 @@ app.get('/keysTransferedToMe', (req, res) => {
             })
     })
 
+})
+
+// Tymczasowe szybkie wpisu histori do bazy danych
+
+app.get('/addHistory', (req, res) => {
+
+    const dateNow = new Date();
+    const newHistory = new History({
+        keyID: "KP_0016",
+        isTakenBy: "twis",
+        isTakenData: "2022-02-06T17:55:58.552Z",
+        isReturnedData: dateNow,
+
+    })
+    newHistory.save()
+        .then(data => {
+            res.send(`Poprawnie utworzono wpis historii`)
+        })
+        .catch(err => {
+            throw err;
+        })
 })
 
 // Tymczasowe szybkie dodawanie kluczy do bazy danych
