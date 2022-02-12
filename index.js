@@ -16,6 +16,9 @@ const {
 const {
     json
 } = require('express');
+const {
+    findByIdAndUpdate
+} = require('./data/schema/User');
 
 const app = express();
 
@@ -249,7 +252,7 @@ app.get('/getMyKeysData', (req, res) => {
 });
 
 //Wyszukujemy klucz i aktualizujemy jego wartość na podstawie otrzymanych danych.
-app.post('/isTakenByUpdate', (req, res) => {
+app.post('/getKey', (req, res) => {
     confirmUserPermissions(req, res, async () => {
 
         const dataToUpdate = {
@@ -263,7 +266,33 @@ app.post('/isTakenByUpdate', (req, res) => {
                 keyID: req.body.keyID
             }, dataToUpdate)
             .then(() => {
-                addHistory(dataToUpdate)
+                res.send(JSON.stringify({
+                    error: false,
+                    message: ""
+                }))
+            })
+            .catch((err) => {
+                res.send(JSON.stringify({
+                    error: true,
+                    message: err.message
+                }))
+            })
+    })
+})
+app.post('/returnKey', (req, res) => {
+    confirmUserPermissions(req, res, async () => {
+
+        const dataToUpdate = {
+            isTakenBy: req.body.isTakenBy,
+            isTaken: req.body.isTaken,
+            isTakenData: req.body.isTakenData,
+            isTransferedTo: ""
+        }
+
+        await Key.findOneAndUpdate({
+                keyID: req.body.keyID
+            }, dataToUpdate)
+            .then(() => {
                 res.send(JSON.stringify({
                     error: false,
                     message: ""
@@ -279,13 +308,51 @@ app.post('/isTakenByUpdate', (req, res) => {
 })
 
 //Robimy wpis do historii
-const addHistory = (data) => {
+const addHistory = async (keyID, type, data) => {
+    switch (type) {
+        case 'GET':
+            console.log("To jest get!")
 
-    if (data.isTaken === true) {
-        console.log(`pobieramy klucz`)
-    } else {
-        console.log(`zwracamy klucz`)
+            break;
+
+        case 'RETURN':
+            console.log("To jest return!")
+
+            break;
+
+        case 'TRANSFER':
+            console.log("To jest transfer!")
+
+            break;
     }
+
+    // const test = keyID;
+    // const dateNow = new Date();
+
+    // const defaultDataToSave = {
+    //     isTakenData: null,
+    //     isTakenBy: "",
+    //     isReturned: false,
+    //     isReturnedData: null,
+    // };
+
+    // const dataToSave = {
+    //     keyID: test,
+    //     ...defaultDataToSave,
+    //     ...data,
+    // };
+
+    // const newHistory = new History({
+    //     ...dataToSave
+
+    // })
+    // newHistory.save()
+    //     .then(data => {
+    //         // res.send(`Poprawnie utworzono wpis historii`)
+    //     })
+    //     .catch(err => {
+    //         throw err;
+    //     })
 
 }
 
@@ -369,12 +436,10 @@ app.get('/findUserToTransfer', (req, res) => {
 
 
 app.get('/getKeyHistory', (req, res) => {
-    console.log(req.query.keyID)
     History.find({
             keyID: req.query.keyID
         })
         .then(data => {
-            console.log(data)
             res.send(JSON.stringify(data))
         })
         .catch(err => {
