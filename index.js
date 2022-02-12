@@ -307,6 +307,31 @@ app.post('/returnKey', (req, res) => {
     })
 })
 
+app.post('/transferKey', async (req, res) => {
+    const dataToUpdate = {
+        isTakenBy: req.body.isTakenBy,
+        isTaken: req.body.isTaken,
+        isTakenData: req.body.isTakenData,
+        isTransferedTo: ""
+    }
+
+    await Key.findOneAndUpdate({
+            keyID: req.body.keyID
+        }, dataToUpdate)
+        .then(() => {
+            res.send(JSON.stringify({
+                error: false,
+                message: ""
+            }))
+        })
+        .catch((err) => {
+            res.send(JSON.stringify({
+                error: true,
+                message: err.message
+            }))
+        })
+})
+
 //Robimy wpis do historii
 const addHistory = async (keyID, type, data) => {
     switch (type) {
