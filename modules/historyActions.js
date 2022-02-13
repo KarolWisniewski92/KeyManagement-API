@@ -14,6 +14,8 @@ const addHistory = async (type, data) => {
     })
 
     let dataToUpdate = {};
+    let history;
+    let lastHistoryItem;
 
     switch (type) {
         case 'GET':
@@ -39,13 +41,13 @@ const addHistory = async (type, data) => {
             console.log("To jest return!")
             dataToUpdate = {
                 isReturned: true,
-                isReturnedData: new Date()
+                isReturnedData: data.isReturnedData
             }
 
-            const history = await History.find({
+            history = await History.find({
                 keyID: data.keyID
             })
-            const lastHistoryItem = history.pop();
+            lastHistoryItem = history.pop();
 
             History.findByIdAndUpdate({
                     _id: lastHistoryItem._id
@@ -60,6 +62,45 @@ const addHistory = async (type, data) => {
 
         case 'TRANSFER':
             console.log("To jest transfer!")
+            dataToUpdate = {
+                isReturned: true,
+                isReturnedData: data.isReturnedData
+            }
+
+            history = await History.find({
+                keyID: data.keyID
+            })
+            lastHistoryItem = history.pop();
+
+            History.findByIdAndUpdate({
+                    _id: lastHistoryItem._id
+                }, dataToUpdate, {
+                    returnDocument: 'after'
+                })
+
+                .then(() => {
+                    dataToUpdate = {
+                        ...data,
+                        isReturned: false,
+                        isReturnedData: null
+                    }
+
+                    console.log({
+                        dataToUpdate
+                    })
+                    const newHistory = new History({
+                        ...dataToUpdate
+                    })
+                    newHistory.save()
+                        .catch(err => {
+                            throw err;
+                        })
+                })
+                .catch(err => {
+                    throw err;
+                })
+
+
 
             break;
     }
