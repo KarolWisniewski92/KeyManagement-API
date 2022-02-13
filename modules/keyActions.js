@@ -78,6 +78,7 @@ const transferKey = (req, res) => {
             isTakenData: req.body.isTakenData,
             isTransferedTo: ""
         }
+        console.log(req.body)
 
         await Key.findOneAndUpdate({
                 keyID: req.body.keyID
@@ -87,7 +88,7 @@ const transferKey = (req, res) => {
                     keyID: req.body.keyID,
                     isTakenBy: req.body.isTakenBy,
                     isTakenData: req.body.isTakenData,
-                    isReturnedData: req.body.isReturnedData,
+                    isReturnedData: req.body.isTakenData, //isTakenDate is also isReturnedDate
                 })
                 res.send(JSON.stringify({
                     error: false,

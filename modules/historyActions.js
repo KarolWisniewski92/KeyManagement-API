@@ -62,6 +62,9 @@ const addHistory = async (type, data) => {
 
         case 'TRANSFER':
             console.log("To jest transfer!")
+            console.log({
+                data
+            })
             dataToUpdate = {
                 isReturned: true,
                 isReturnedData: data.isReturnedData
@@ -71,6 +74,7 @@ const addHistory = async (type, data) => {
                 keyID: data.keyID
             })
             lastHistoryItem = history.pop();
+            console.log(dataToUpdate)
 
             History.findByIdAndUpdate({
                     _id: lastHistoryItem._id
