@@ -253,54 +253,7 @@ app.post('/transferKey', modules.transferKey);
 //Wyszukujemy klucz i wpisujemy informację o chęci przekazania klucza.
 app.post('/isTransferedToUpdate', modules.isTransferedToUpdate)
 
-//Robimy wpis do historii
-const addHistory = async (keyID, type, data) => {
-    switch (type) {
-        case 'GET':
-            console.log("To jest get!")
 
-            break;
-
-        case 'RETURN':
-            console.log("To jest return!")
-
-            break;
-
-        case 'TRANSFER':
-            console.log("To jest transfer!")
-
-            break;
-    }
-
-    // const test = keyID;
-    // const dateNow = new Date();
-
-    // const defaultDataToSave = {
-    //     isTakenData: null,
-    //     isTakenBy: "",
-    //     isReturned: false,
-    //     isReturnedData: null,
-    // };
-
-    // const dataToSave = {
-    //     keyID: test,
-    //     ...defaultDataToSave,
-    //     ...data,
-    // };
-
-    // const newHistory = new History({
-    //     ...dataToSave
-
-    // })
-    // newHistory.save()
-    //     .then(data => {
-    //         // res.send(`Poprawnie utworzono wpis historii`)
-    //     })
-    //     .catch(err => {
-    //         throw err;
-    //     })
-
-}
 
 
 

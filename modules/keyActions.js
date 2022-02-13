@@ -1,11 +1,12 @@
-const confirmUserPermissions = require('./confirmUserPermissions');
+const confirmUserPermissions = require('./confirmUserPermissions').confirmUserPermissions;
+const addHistory = require('./historyActions').addHistory;
 
 const {
     Key
-} = require('./../data/schema');
+} = require('../data/schema');
 
 const getKey = (req, res) => {
-    confirmUserPermissions.confirmUserPermissions(req, res, async () => {
+    confirmUserPermissions(req, res, async () => {
 
         const dataToUpdate = {
             isTakenBy: req.body.isTakenBy,
@@ -18,6 +19,11 @@ const getKey = (req, res) => {
                 keyID: req.body.keyID
             }, dataToUpdate)
             .then(() => {
+                addHistory("GET", {
+                    keyID: req.body.keyID,
+                    isTakenBy: req.body.isTakenBy,
+                    isTakenData: req.body.isTakenData,
+                })
                 res.send(JSON.stringify({
                     error: false,
                     message: ""
@@ -33,7 +39,7 @@ const getKey = (req, res) => {
 };
 
 const returnKey = (req, res) => {
-    confirmUserPermissions.confirmUserPermissions(req, res, async () => {
+    confirmUserPermissions(req, res, async () => {
 
         const dataToUpdate = {
             isTakenBy: req.body.isTakenBy,
@@ -46,6 +52,10 @@ const returnKey = (req, res) => {
                 keyID: req.body.keyID
             }, dataToUpdate)
             .then(() => {
+                addHistory("RETURN", {
+                    keyID: req.body.keyID,
+                    isReturnedData: req.body.isReturnedData,
+                })
                 res.send(JSON.stringify({
                     error: false,
                     message: ""
@@ -61,7 +71,7 @@ const returnKey = (req, res) => {
 };
 
 const transferKey = (req, res) => {
-    confirmUserPermissions.confirmUserPermissions(req, res, async () => {
+    confirmUserPermissions(req, res, async () => {
         const dataToUpdate = {
             isTakenBy: req.body.isTakenBy,
             isTaken: req.body.isTaken,
@@ -73,6 +83,12 @@ const transferKey = (req, res) => {
                 keyID: req.body.keyID
             }, dataToUpdate)
             .then(() => {
+                addHistory("TRANSFER", {
+                    keyID: req.body.keyID,
+                    isTakenBy: req.body.isTakenBy,
+                    isTakenData: req.body.isTakenData,
+                    isReturnedData: req.body.isReturnedData,
+                })
                 res.send(JSON.stringify({
                     error: false,
                     message: ""
@@ -88,7 +104,7 @@ const transferKey = (req, res) => {
 };
 
 const isTransferedToUpdate = (req, res) => {
-    confirmUserPermissions.confirmUserPermissions(req, res, async () => {
+    confirmUserPermissions(req, res, async () => {
         const dataToUpdate = {
             isTransferedTo: req.body.user_id
         }
