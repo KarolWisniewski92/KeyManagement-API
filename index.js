@@ -3,10 +3,12 @@ const envData = require('dotenv').config()
 const mongoose = require('mongoose');
 const cors = require('cors');
 const passport = require('passport')
-const LocalStrategy = require('passport-local').Strategy;
 const cookieParser = require('cookie-parser');
-const bcrypt = require('bcryptjs');
 const session = require('express-session');
+// const LocalStrategy = require('passport-local').Strategy;
+// const bcrypt = require('bcryptjs');
+
+const modules = require('./modules/modules');
 
 const {
     User,
@@ -59,18 +61,7 @@ db.once('open', () => console.log('Database connected:', process.env.DB_HOST));
 app.use(cors({
     origin: `http://localhost:${process.env.CLIENT_PORT}`,
     credentials: true
-}))
-
-
-//----------------FUNCTIONS-------------------------
-const confirmUserPermissions = (req, res, callback) => {
-    const check = typeof req.user !== "undefined" ? true : false;
-    if (check) {
-        callback();
-    } else {
-        res.status(401).end(); //Zakończ i wyślij kod Unauthorized!
-    }
-}
+}));
 
 //----------------ROUTING----------------------------
 
@@ -178,7 +169,7 @@ app.get('/user', (req, res) => {
 
 //Pobieramy urzytkownika o nadesłanych user_id. Usuwamy klucz password i odsyłamy.
 app.post('/getUserData', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         User.findOne({
                 user_id: req.body.userID
             })
@@ -200,10 +191,9 @@ app.post('/getUserData', (req, res) => {
 
 });
 
-
 //Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
 app.get('/getKeysData', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         Key.find({
                 set: req.query.set
             })
@@ -220,7 +210,7 @@ app.get('/getKeysData', (req, res) => {
 
 //Wyszukujemy klucze pasujące do danego set'u i odsyłamy.
 app.get('/getKeyData', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         Key.find({
                 keyID: req.query.keyID
             })
@@ -237,7 +227,7 @@ app.get('/getKeyData', (req, res) => {
 
 //Wyszukujemy klucze które obecnie posiada użytkownik.
 app.get('/getMyKeysData', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         Key.find({
                 isTakenBy: req.query.user_id
             })
@@ -251,86 +241,17 @@ app.get('/getMyKeysData', (req, res) => {
 
 });
 
-//Wyszukujemy klucz i aktualizujemy jego wartość na podstawie otrzymanych danych.
-app.post('/getKey', (req, res) => {
-    confirmUserPermissions(req, res, async () => {
+//Wyszukujemy klucz i przypisujemy mu użytkownika który go pobrał (probieramy klucz).
+app.post('/getKey', modules.getKey);
 
-        const dataToUpdate = {
-            isTakenBy: req.body.isTakenBy,
-            isTaken: req.body.isTaken,
-            isTakenData: req.body.isTakenData,
-            isTransferedTo: ""
-        }
+//Wyszukujemy klucz i czyścimy dane użytkownika który go pobrał (zwracamy klucz).
+app.post('/returnKey', modules.returnKey);
 
-        await Key.findOneAndUpdate({
-                keyID: req.body.keyID
-            }, dataToUpdate)
-            .then(() => {
-                res.send(JSON.stringify({
-                    error: false,
-                    message: ""
-                }))
-            })
-            .catch((err) => {
-                res.send(JSON.stringify({
-                    error: true,
-                    message: err.message
-                }))
-            })
-    })
-})
-app.post('/returnKey', (req, res) => {
-    confirmUserPermissions(req, res, async () => {
+//Wyszukujemy klucz i nadpisujemy dane użytkownika który go pobrał (transferujemy od jegnego użytkownika do innego).
+app.post('/transferKey', modules.transferKey);
 
-        const dataToUpdate = {
-            isTakenBy: req.body.isTakenBy,
-            isTaken: req.body.isTaken,
-            isTakenData: req.body.isTakenData,
-            isTransferedTo: ""
-        }
-
-        await Key.findOneAndUpdate({
-                keyID: req.body.keyID
-            }, dataToUpdate)
-            .then(() => {
-                res.send(JSON.stringify({
-                    error: false,
-                    message: ""
-                }))
-            })
-            .catch((err) => {
-                res.send(JSON.stringify({
-                    error: true,
-                    message: err.message
-                }))
-            })
-    })
-})
-
-app.post('/transferKey', async (req, res) => {
-    const dataToUpdate = {
-        isTakenBy: req.body.isTakenBy,
-        isTaken: req.body.isTaken,
-        isTakenData: req.body.isTakenData,
-        isTransferedTo: ""
-    }
-
-    await Key.findOneAndUpdate({
-            keyID: req.body.keyID
-        }, dataToUpdate)
-        .then(() => {
-            res.send(JSON.stringify({
-                error: false,
-                message: ""
-            }))
-        })
-        .catch((err) => {
-            res.send(JSON.stringify({
-                error: true,
-                message: err.message
-            }))
-        })
-})
+//Wyszukujemy klucz i wpisujemy informację o chęci przekazania klucza.
+app.post('/isTransferedToUpdate', modules.isTransferedToUpdate)
 
 //Robimy wpis do historii
 const addHistory = async (keyID, type, data) => {
@@ -381,34 +302,12 @@ const addHistory = async (keyID, type, data) => {
 
 }
 
-app.post('/isTransferedToUpdate', (req, res) => {
-    confirmUserPermissions(req, res, async () => {
-        const dataToUpdate = {
-            isTransferedTo: req.body.user_id
-        }
 
-        await Key.findOneAndUpdate({
-                keyID: req.body.keyID
-            }, dataToUpdate)
-            .then(() => {
-                res.send(JSON.stringify({
-                    error: false,
-                    message: ""
-                }))
-            })
-            .catch((err) => {
-                res.send(JSON.stringify({
-                    error: true,
-                    message: err.message
-                }))
-            })
-    })
-})
 
 
 //Wyszukujemy użytkowników po nadełanych danych Imię, Nazwisko, Email, lub imię i nazwisko
 app.get('/findUserToTransfer', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         const user = req.query.user;
         const data = user.split(' ');
         let dataToFind = ``;
@@ -474,7 +373,7 @@ app.get('/getKeyHistory', (req, res) => {
 })
 
 app.get('/keysTransferedToMe', (req, res) => {
-    confirmUserPermissions(req, res, () => {
+    modules.confirmUserPermissions(req, res, () => {
         Key.find({
                 isTransferedTo: req.query.user
             })
