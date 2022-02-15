@@ -59,7 +59,7 @@ db.once('open', () => console.log('Database connected:', process.env.DB_HOST));
 //------------------CORS---------------------
 
 app.use(cors({
-    origin: `http://localhost:${process.env.CLIENT_PORT}`,
+    origin: `http://192.168.0.120:${process.env.CLIENT_PORT}`,
     credentials: true
 }));
 
