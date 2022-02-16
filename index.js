@@ -11,8 +11,7 @@ const modules = require('./modules/modules');
 
 const {
     User,
-    Key,
-    History
+    Key
 } = require('./data/schema');
 
 const app = express();
@@ -52,105 +51,12 @@ corsConfig(app);
 
 app.get('/', async function (req, res) {})
 
-app.post('/login', async (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-        if (err) throw err;
-        if (typeof info !== "undefined") { //Jeżeli wystąpił jakiś błąd to jego text jest pod info. Jeżeli błędów nie ma to info jest undefinded.
-            res.send(JSON.stringify({ // Wysyła informacje o błędzie który wystąpił! 
-                error: true,
-                message: info
-            }))
-        } else {
-            req.logIn(user, err => {
-                if (err) throw err;
-                res.send(JSON.stringify({
-                    error: false,
-                    message: "Pomyślnie zalogowano!"
-                }))
-                console.log(`Zalogował się ${req.user.name} ${req.user.surname}`)
-            })
-        }
-    })(req, res, next)
-})
-
-app.get('/logout', (req, res) => {
-    if (typeof req.user !== "undefined") {
-        console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname}`);
-    }
-    req.logout();
-    res.send('Wylogowano!')
-
-});
-
-
-app.post('/register', async (req, res) => {
-
-    User.findOne({
-            email: req.body.email
-        })
-        .then(async (user) => {
-            if (user !== null) {
-                res.send(JSON.stringify(`Użytkownik już istnieje!`))
-                return;
-            }
-
-            const getNewId = async (length) => {
-
-                const generateID = (length) => {
-                    var result = '';
-                    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                    var charactersLength = characters.length;
-                    for (var i = 0; i < length; i++) {
-                        result += characters.charAt(Math.floor(Math.random() *
-                            charactersLength));
-                    }
-                    return result;
-                }
-
-                const id = generateID(length);
-                const isAvailable = await User.find({
-                        id: id
-                    })
-                    .then(user => {
-                        return user.length === 0 ? true : false
-                    })
-                    .catch(err => {
-                        throw err;
-                    })
-
-                return isAvailable ? id : getNewId();
-            }
-
-            const newUser = new User({
-                ...req.body,
-                role: 'user',
-                isActive: false,
-                user_id: await getNewId(6)
-            })
-
-
-            await newUser.save()
-                .then(data => {
-                    res.send(`Poprawnie utworzono nowego użytownika!`)
-                })
-                .catch(err => {
-                    throw err;
-                })
-        })
-        .catch(err => {
-            throw err;
-        })
-
-})
+app.post('/login', modules.logIn);
+app.get('/logout', modules.logOut);
+app.post('/register', modules.register);
 
 // Odsyła informacje o obecnie zalogowanym użytkowniku.
-app.get('/user', (req, res) => {
-    if (req.user === undefined) {
-        res.send({})
-    } else {
-        res.send(JSON.stringify(req.user[0]));
-    }
-});
+app.get('/user', modules.getLoggedUser);
 
 //Pobieramy urzytkownika o nadesłanych user_id. Usuwamy klucz password i odsyłamy.
 app.post('/getUserData', (req, res) => {
@@ -236,9 +142,10 @@ app.post('/returnKey', modules.returnKey);
 app.post('/transferKey', modules.transferKey);
 
 //Wyszukujemy klucz i wpisujemy informację o chęci przekazania klucza.
-app.post('/isTransferedToUpdate', modules.isTransferedToUpdate)
+app.post('/isTransferedToUpdate', modules.isTransferedToUpdate);
 
-
+//Pobiera wpisy historii dla danego klucza.
+app.get('/getKeyHistory', modules.getKeyHistory);
 
 
 
@@ -297,18 +204,6 @@ app.get('/findUserToTransfer', (req, res) => {
 })
 
 
-app.get('/getKeyHistory', (req, res) => {
-    History.find({
-            keyID: req.query.keyID
-        })
-        .then(data => {
-            res.send(JSON.stringify(data))
-        })
-        .catch(err => {
-            throw err;
-        })
-
-})
 
 app.get('/keysTransferedToMe', (req, res) => {
     modules.confirmUserPermissions(req, res, () => {
@@ -327,24 +222,24 @@ app.get('/keysTransferedToMe', (req, res) => {
 
 // Tymczasowe szybkie wpisu histori do bazy danych
 
-app.get('/addHistory', (req, res) => {
+// app.get('/addHistory', (req, res) => {
 
-    const dateNow = new Date();
-    const newHistory = new History({
-        keyID: "KP_0016",
-        isTakenBy: "twis",
-        isTakenData: "2022-02-06T17:55:58.552Z",
-        isReturnedData: dateNow,
+//     const dateNow = new Date();
+//     const newHistory = new History({
+//         keyID: "KP_0016",
+//         isTakenBy: "twis",
+//         isTakenData: "2022-02-06T17:55:58.552Z",
+//         isReturnedData: dateNow,
 
-    })
-    newHistory.save()
-        .then(data => {
-            res.send(`Poprawnie utworzono wpis historii`)
-        })
-        .catch(err => {
-            throw err;
-        })
-})
+//     })
+//     newHistory.save()
+//         .then(data => {
+//             res.send(`Poprawnie utworzono wpis historii`)
+//         })
+//         .catch(err => {
+//             throw err;
+//         })
+// })
 
 // Tymczasowe szybkie dodawanie kluczy do bazy danych
 

@@ -1,11 +1,18 @@
-const confirmUserPermissions = require('./confirmUserPermissions');
-
 const {
     History
 } = require('../data/schema');
-const {
-    findByIdAndUpdate
-} = require('../data/schema/User');
+
+const getKeyHistory = (req, res) => {
+    History.find({
+            keyID: req.query.keyID
+        })
+        .then(data => {
+            res.send(JSON.stringify(data))
+        })
+        .catch(err => {
+            throw err;
+        })
+};
 
 //Robimy wpis do historii
 const addHistory = async (type, data) => {
@@ -111,38 +118,6 @@ const addHistory = async (type, data) => {
 }
 
 module.exports = {
-    addHistory
+    addHistory,
+    getKeyHistory
 }
-
-
-
-
-// const test = keyID;
-// const dateNow = new Date();
-
-// const defaultDataToSave = {
-//     isTakenData: null,
-//     isTakenBy: "",
-//     isReturned: false,
-//     isReturnedData: null,
-// };
-
-// const dataToSave = {
-//     keyID: test,
-//     ...defaultDataToSave,
-//     ...data,
-// };
-
-// const newHistory = new History({
-//     ...dataToSave
-
-// })
-// newHistory.save()
-//     .then(data => {
-//         // res.send(`Poprawnie utworzono wpis historii`)
-//     })
-//     .catch(err => {
-//         throw err;
-//     })
-
-// }
