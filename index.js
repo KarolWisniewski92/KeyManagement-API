@@ -1,67 +1,52 @@
 const express = require('express');
 const envData = require('dotenv').config()
-const mongoose = require('mongoose');
-const cors = require('cors');
+const mongooseConfig = require('./mongooseConfig').mongooseConfig;
+const corsConfig = require('./corsConfig').corsConfig;
 const passport = require('passport')
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
+const modules = require('./modules/modules');
 // const LocalStrategy = require('passport-local').Strategy;
 // const bcrypt = require('bcryptjs');
-
-const modules = require('./modules/modules');
 
 const {
     User,
     Key,
     History
 } = require('./data/schema');
-const {
-    json
-} = require('express');
-const {
-    findByIdAndUpdate
-} = require('./data/schema/User');
 
 const app = express();
 
-app.use(express.json())
-app.use(express.urlencoded({
-    extended: true
-}));
+
+//----------------passport & session configuration-----------
 app.use(session({
     secret: "secretcode",
     resave: true,
     saveUninitialized: true
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+require('./passportConfig')(passport);
+
+//----------------parser configuration-----------
+app.use(cookieParser("secretcode"));
+app.use(express.json())
+app.use(express.urlencoded({
+    extended: true
+}));
 app.use(function (req, res, next) {
     res.setHeader("Content-Type", "application/json");
     next();
 });
 
-app.use(cookieParser("secretcode"));
-app.use(passport.initialize());
-app.use(passport.session());
-require('./passportConfig')(passport);
-
 //----------------mongoose configuration-----------
 
-mongoose.connect(process.env.DB_HOST, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true
-    })
-    .catch(err => console.log(`Database connection error! CODE: "${err.code}"`));
-
-const db = mongoose.connection;
-db.on('error', err => console.log(`Database error! CODE: "${err.code}"`));
-db.once('open', () => console.log('Database connected:', process.env.DB_HOST));
+mongooseConfig();
 
 //------------------CORS---------------------
 
-app.use(cors({
-    origin: `http://192.168.0.120:${process.env.CLIENT_PORT}`,
-    credentials: true
-}));
+corsConfig(app);
 
 //----------------ROUTING----------------------------
 
