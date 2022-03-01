@@ -147,6 +147,9 @@ app.post('/isTransferedToUpdate', modules.isTransferedToUpdate);
 //Pobiera wpisy historii dla danego klucza.
 app.get('/getKeyHistory', modules.getKeyHistory);
 
+//Dodaje nowy klucz do bazy danych
+app.post('/addNewKey', modules.addNewKey)
+
 
 
 
@@ -241,7 +244,11 @@ app.get('/keysTransferedToMe', (req, res) => {
 //         })
 // })
 
+
+
+
 // Tymczasowe szybkie dodawanie kluczy do bazy danych
+
 
 // app.get('/addKey', (req, res) => {
 //     const newKey = new Key({

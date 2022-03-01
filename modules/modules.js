@@ -1,4 +1,5 @@
 const confirmUserPermissions = require('./confirmUserPermissions').confirmUserPermissions;
+const confirmAdminPermissions = require('./confirmAdminPermissions').confirmAdminPermissions;
 
 //keyActions
 const getKey = require('./keyActions').getKey;
@@ -16,8 +17,12 @@ const logOut = require('./userActions').logOut;
 const register = require('./userActions').register;
 const getLoggedUser = require('./userActions').getLoggedUser;
 
+//adminActions
+const addNewKey = require('./adminActions').addNewKey;
+
 module.exports = {
     confirmUserPermissions,
+    confirmAdminPermissions,
     getKey,
     returnKey,
     transferKey,
@@ -27,5 +32,6 @@ module.exports = {
     logOut,
     register,
     getLoggedUser,
-    getKeyHistory
+    getKeyHistory,
+    addNewKey
 }
