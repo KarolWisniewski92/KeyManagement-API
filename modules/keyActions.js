@@ -78,7 +78,6 @@ const transferKey = (req, res) => {
             isTakenData: req.body.isTakenData,
             isTransferedTo: ""
         }
-        console.log(req.body)
 
         await Key.findOneAndUpdate({
                 keyID: req.body.keyID

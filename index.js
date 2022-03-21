@@ -206,8 +206,6 @@ app.get('/findUserToTransfer', (req, res) => {
 
 })
 
-
-
 app.get('/keysTransferedToMe', (req, res) => {
     modules.confirmUserPermissions(req, res, () => {
         Key.find({

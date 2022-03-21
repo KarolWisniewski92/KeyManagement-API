@@ -18,7 +18,9 @@ const logIn = async (req, res, next) => {
                     error: false,
                     message: "Pomyślnie zalogowano!"
                 }))
-                console.log(`Zalogował się ${req.user.name} ${req.user.surname}`)
+                const date = new Date()
+
+                console.log(`Zalogował się ${req.user.name} ${req.user.surname} ${("0" + date.getHours()).slice(-2)}:${("0" + date.getMinutes()).slice(-2)}:${("0" + date.getSeconds()).slice(-2)}s`)
             })
         }
     })(req, res, next)
@@ -26,7 +28,8 @@ const logIn = async (req, res, next) => {
 
 const logOut = (req, res) => {
     if (typeof req.user !== "undefined") {
-        console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname}`);
+        const date = new Date()
+        console.log(`Wylogował się ${req.user[0].name} ${req.user[0].surname} ${("0" + date.getHours()).slice(-2)}:${("0" + date.getMinutes()).slice(-2)}:${("0" + date.getSeconds()).slice(-2)}s`);
     }
     req.logout();
     res.send('Wylogowano!')

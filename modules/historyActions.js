@@ -16,9 +16,6 @@ const getKeyHistory = (req, res) => {
 
 //Robimy wpis do historii
 const addHistory = async (type, data) => {
-    console.log({
-        type
-    })
 
     let dataToUpdate = {};
     let history;
@@ -26,7 +23,6 @@ const addHistory = async (type, data) => {
 
     switch (type) {
         case 'GET':
-            console.log("To jest get!")
             dataToUpdate = {
                 ...data,
                 isReturned: false,
@@ -41,11 +37,9 @@ const addHistory = async (type, data) => {
                     throw err;
                 })
 
-            console.log(dataToUpdate)
             break;
 
         case 'RETURN':
-            console.log("To jest return!")
             dataToUpdate = {
                 isReturned: true,
                 isReturnedData: data.isReturnedData
@@ -68,10 +62,6 @@ const addHistory = async (type, data) => {
             break;
 
         case 'TRANSFER':
-            console.log("To jest transfer!")
-            console.log({
-                data
-            })
             dataToUpdate = {
                 isReturned: true,
                 isReturnedData: data.isReturnedData
@@ -81,7 +71,6 @@ const addHistory = async (type, data) => {
                 keyID: data.keyID
             })
             lastHistoryItem = history.pop();
-            console.log(dataToUpdate)
 
             History.findByIdAndUpdate({
                     _id: lastHistoryItem._id
@@ -96,9 +85,6 @@ const addHistory = async (type, data) => {
                         isReturnedData: null
                     }
 
-                    console.log({
-                        dataToUpdate
-                    })
                     const newHistory = new History({
                         ...dataToUpdate
                     })
