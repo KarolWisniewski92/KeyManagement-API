@@ -2,6 +2,7 @@ const passport = require('passport');
 const {
     User
 } = require('../data/schema/index');
+const bcrypt = require('bcryptjs');
 
 const logIn = async (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
@@ -37,6 +38,7 @@ const logOut = (req, res) => {
 };
 
 const register = async (req, res) => {
+    const saltRounds = 10;
 
     User.findOne({
             email: req.body.email
@@ -49,6 +51,11 @@ const register = async (req, res) => {
                 }))
                 return;
             }
+
+            const cryptedPassword = await bcrypt.hash(req.body.password, saltRounds)
+                .then(function (hash) {
+                    return hash;
+                });
 
             const getNewId = async (length) => {
 
@@ -79,6 +86,7 @@ const register = async (req, res) => {
 
             const newUser = new User({
                 ...req.body,
+                password: cryptedPassword,
                 role: 'user',
                 isActive: false,
                 user_id: await getNewId(6)

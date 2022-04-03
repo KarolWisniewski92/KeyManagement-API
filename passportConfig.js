@@ -12,10 +12,16 @@ module.exports = function (passport) {
         (email, password, done) => {
             User.findOne({
                 email: email
-            }, (err, user) => {
+            }, async (err, user) => {
                 if (err) throw err;
                 if (!user) return done(null, false, "Nie znaleziono użytkownika!");
-                if (password === user.password) {
+
+                const checkedPassword = await bcrypt.compare(password, user.password)
+                    .then(function (result) {
+                        return result
+                    })
+
+                if (checkedPassword) {
                     return done(null, user)
                 } else {
                     return done(null, false, "Podano błędne hasło!")
