@@ -43,7 +43,10 @@ const register = async (req, res) => {
         })
         .then(async (user) => {
             if (user !== null) {
-                res.send(JSON.stringify(`Użytkownik już istnieje!`))
+                res.send(JSON.stringify({
+                    error: true,
+                    message: `Użytkownik już istnieje!`
+                }))
                 return;
             }
 
@@ -83,7 +86,10 @@ const register = async (req, res) => {
 
             await newUser.save()
                 .then(data => {
-                    res.send(`Poprawnie utworzono nowego użytownika!`)
+                    res.send(JSON.stringify({
+                        error: false,
+                        message: `Poprawnie utworzono nowego użytownika!`
+                    }))
                 })
                 .catch(err => {
                     throw err;
